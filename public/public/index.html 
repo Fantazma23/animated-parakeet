@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fantazma Network</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/css/fantazma.css">
+  
+  <style>
+    .fn-content {
+      padding-top: 84px; /* Account for fixed header */
+      max-width: 1200px;
+      margin: 0 auto;
+      padding-left: 24px;
+      padding-right: 24px;
+    }
+    
+    .fn-hero {
+      text-align: center;
+      padding: 64px 0;
+    }
+    
+    .fn-hero h1 {
+      font-family: var(--font-display);
+      font-size: 64px;
+      letter-spacing: 4px;
+      margin-bottom: 16px;
+    }
+    
+    .fn-hero p {
+      font-size: 20px;
+      color: rgba(240, 240, 240, 0.7);
+      max-width: 600px;
+      margin: 0 auto 32px;
+    }
+    
+    .fn-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 24px;
+      margin-top: 48px;
+    }
+    
+    .fn-nav {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+    }
+    
+    .fn-nav__link {
+      font-family: var(--font-display);
+      font-size: 14px;
+      letter-spacing: 1px;
+      color: var(--star-white);
+      text-decoration: none;
+      text-transform: uppercase;
+      position: relative;
+      padding: 8px 0;
+      transition: color var(--duration-fast);
+    }
+    
+    .fn-nav__link:hover {
+      color: var(--patriot-crimson);
+    }
+  </style>
+</head>
+<body>
+  <header class="fn-header">
+    <a href="/" class="fn-logo">
+      <div class="fn-logo__eye" style="background: var(--patriot-crimson); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--font-display);">F</div>
+      <span class="fn-logo__text">FANTAZMA <span>NETWORK</span></span>
+    </a>
+    
+    <nav>
+      <ul class="fn-nav">
+        <li><a href="/channels" class="fn-nav__link">Channels</a></li>
+        <li><a href="/live" class="fn-nav__link">Live</a></li>
+        <li><a href="/account" class="fn-nav__link">Account</a></li>
+      </ul>
+    </nav>
+    
+    <button class="fn-btn fn-btn--sm fn-btn--secondary" onclick="logout()">Logout</button>
+  </header>
+
+  <main class="fn-content">
+    <div class="fn-hero">
+      <h1>WHERE VISION MEETS CINEMATIC EXCELLENCE</h1>
+      <p>Original content from Foster Entertainment Productions. Unfiltered. Unapologetic. Uniquely Maine.</p>
+      <button class="fn-btn fn-btn--primary">Start Watching</button>
+    </div>
+    
+    <h2 style="font-family: var(--font-display); font-size: 32px; letter-spacing: 2px; margin-bottom: 24px;">FEATURED CHANNELS</h2>
+    
+    <div class="fn-grid">
+      <div class="fn-card">
+        <div style="aspect-ratio: 16/9; background: linear-gradient(135deg, var(--old-glory-blue), var(--midnight-navy)); display: flex; align-items: center; justify-content: center;">
+          <span style="font-family: var(--font-display); font-size: 48px;">WRITING ROOM</span>
+        </div>
+        <div class="fn-card__content">
+          <h3 class="fn-card__title">THE WRITING ROOM</h3>
+          <p style="color: rgba(240,240,240,0.6); font-size: 14px;">Live scriptwriting sessions with David J. Foster</p>
+        </div>
+      </div>
+      
+      <div class="fn-card">
+        <div style="aspect-ratio: 16/9; background: linear-gradient(135deg, var(--patriot-crimson), #1a0a0a); display: flex; align-items: center; justify-content: center;">
+          <span style="font-family: var(--font-display); font-size: 48px;">AFTER DARK</span>
+        </div>
+        <div class="fn-card__content">
+          <h3 class="fn-card__title">FANTAZMA AFTER DARK</h3>
+          <p style="color: rgba(240,240,240,0.6); font-size: 14px;">Unfiltered commentary and analysis</p>
+        </div>
+      </div>
+      
+      <div class="fn-card">
+        <div style="aspect-ratio: 16/9; background: linear-gradient(135deg, var(--gold-1986), #2a1a0a); display: flex; align-items: center; justify-content: center;">
+          <span style="font-family: var(--font-display); font-size: 48px;">MAINE RAW</span>
+        </div>
+        <div class="fn-card__content">
+          <h3 class="fn-card__title">MAINE RAW</h3>
+          <p style="color: rgba(240,240,240,0.6); font-size: 14px;">Local stories and campaign content</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Check if user is logged in
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location = '/login.html';
+    }
+    
+    // Verify payment status on load
+    fetch('/api/verify', {
+      headers: {'Authorization': 'Bearer ' + token}
+    }).then(res => {
+      if (!res.ok) {
+        localStorage.removeItem('token');
+        window.location = '/login.html';
+      }
+    });
+    
+    function logout() {
+      localStorage.removeItem('token');
+      window.location = '/login.html';
+    }
+  </script>
+</body>
+</html>
