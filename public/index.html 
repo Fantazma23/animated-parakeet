@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fantazma Network - Live Streaming</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .ticker-top, .ticker-bottom {
+            position: fixed;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: #000;
+            border: 2px solid #e94560;
+            overflow: hidden;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+        }
+
+        .ticker-top { top: 0; border-top: none; }
+        .ticker-bottom { bottom: 0; border-bottom: none; }
+
+        .ticker-left, .ticker-right {
+            position: fixed;
+            top: 40px;
+            bottom: 40px;
+            width: 40px;
+            background: #000;
+            border: 2px solid #e94560;
+            overflow: hidden;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .ticker-left { left: 0; border-left: none; }
+        .ticker-right { right: 0; border-right: none; }
+
+        .ticker-wrap-h {
+            display: flex;
+            animation: ticker-h 50s linear infinite;
+            white-space: nowrap;
+        }
+
+        .ticker-wrap-v {
+            display: flex;
+            flex-direction: column;
+            animation: ticker-v 40s linear infinite;
+        }
+
+        @keyframes ticker-h {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        @keyframes ticker-v {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-50%); }
+        }
+
+        .ticker-item-h {
+            display: flex;
+            align-items: center;
+            padding: 0 30px;
+        }
+
+        .ticker-item-v {
+            padding: 20px 5px;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            font-size: 12px;
+        }
+
+        .stock-symbol {
+            color: #e94560;
+            font-weight: bold;
+            margin-right: 10px;
+            font-size: 15px;
+        }
+
+        .stock-price {
+            color: #fff;
+            margin-right: 8px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .stock-change {
+            color: #00ff88;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .stock-change.negative { color: #ff4757; }
+        .stock-change.neutral { color: #ffd700; }
+
+        .main-container {
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            right: 40px;
+            bottom: 40px;
+            display: flex;
+            background: #0a0a0a;
+        }
+
+        .header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 350px;
+            background: linear-gradient(90deg, #1a1a2e 0%, #16213e 100%);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #e94560;
+            z-index: 100;
+            height: 60px;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: bold;
+            color: #e94560;
+        }
+
+        .channel-selector {
+            display: flex;
+            gap: 8px;
+        }
+
+        .channel-btn {
+            padding: 6px 15px;
+            background: #0f3460;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s;
+            font-size: 12px;
+        }
+
+        .channel-btn:hover, .channel-btn.active {
+            background: #e94560;
+        }
+
+        .video-section {
+            flex: 1;
+            background: #000;
+            margin-top: 60px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .video-player {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+            position: relative;
+        }
+
+        .youtube-container {
+            width: 100%;
+            height: 100%;
+            display: none;
+        }
+
+        .youtube-container.active {
+            display: block;
+        }
+
+        .youtube-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .social-feed-container {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 320px;
+            height: 450px;
+            background: rgba(0,0,0,0.95);
+            border: 2px solid #e94560;
+            border-radius: 10px;
+            overflow: hidden;
+            z-index: 50;
+            display: none;
+        }
+
+        .social-feed-container.active {
+            display: block;
+        }
+
+        .social-header {
+            background: #e94560;
+            padding: 12px;
+            font-weight: bold;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .social-feed {
+            height: calc(100% - 45px);
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .social-post {
+            background: #1a1a2e;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 3px solid #e94560;
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+        }
+
+        .post-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #e94560;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .post-author {
+            color: #e94560;
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        .post-verified {
+            color: #00ff88;
+            font-size: 12px;
+        }
+
+        .post-content {
+            font-size: 13px;
+            line-height: 1.4;
+            margin-left: 40px;
+        }
+
+        .post-time {
+            color: #666;
+            font-size: 10px;
+            margin-top: 5px;
+            margin-left: 40px;
+        }
+
+        .chat-section {
+            width: 350px;
+            background: #1a1a2e;
+            border-left: 2px solid #0f3460;
+            display: flex;
+            flex-direction: column;
+            margin-top: 60px;
+        }
+
+        .chat-header {
+            padding: 12px;
+            background: #0f3460;
+            font-weight: bold;
+            border-bottom: 2px solid #e94560;
+            font-size: 14px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .message {
+            background: #16213e;
+            padding: 8px;
+            border-radius: 8px;
+            border-left: 3px solid #e94560;
+        }
+
+        .message-username {
+            color: #e94560;
+            font-weight: bold;
+            font-size: 11px;
+        }
+
+        .message-text {
+            margin-top: 3px;
+            font-size: 13px;
+        }
+
+        .chat-input-area {
+            padding: 12px;
+            background: #0f3460;
+            display: flex;
+            gap: 8px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 5px;
+            background: #1a1a2e;
+            color: white;
+            font-size: 13px;
+        }
+
+        .send-btn {
+            padding: 8px 15px;
+            background: #e94560;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .toggle-social {
+            position: absolute;
+            top: 70px;
+            left: 10px;
+            background: #e94560;
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 60;
+            font-size: 12px;
+        }
+
+        .placeholder-content {
+            text-align: center;
+            color: #666;
+        }
+
+        .placeholder-content h2 {
+            color: #e94560;
+            margin-bottom: 10px;
+        }
+
+        .api-status {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.8);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 11px;
+            color: #00ff88;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            .chat-section {
+                width: 100%;
+                height: 200px;
+                margin-top: 0;
+            }
+            .social-feed-container {
+                width: 250px;
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="ticker-top">
+        <div class="ticker-wrap-h" id="tickerTop">
+            <div class="ticker-item-h"><span style="color: #ffd700;">Loading real-time market data...</span></div>
+        </div>
+    </div>
+    <div class="ticker-left">
+        <div class="ticker-wrap-v" id="tickerLeft">
+            <div class="ticker-item-v" style="color: #ffd700;">Loading...</div>
+        </div>
+    </div>
+    <div class="ticker-right">
+        <div class="ticker-wrap-v" id="tickerRight">
+            <div class="ticker-item-v" style="color: #ffd700;">Loading...</div>
+        </div>
+    </div>
+    <div class="ticker-bottom">
+        <div class="ticker-wrap-h" id="tickerBottom">
+            <div class="ticker-item-h"><span style="color: #ffd700;">Loading real-time market data...</span></div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="header">
+            <div class="logo">📺 FANTAZMA NETWORK</div>
+            <div class="channel-selector">
+                <button class="channel-btn active" onclick="switchChannel('main', 'Main Channel')">Main</button>
+                <button class="channel-btn" onclick="switchChannel('sports', 'Sports')">Sports</button>
+                <button class="channel-btn" onclick="switchChannel('news', 'News')">News</button>
+                <button class="channel-btn" onclick="switchChannel('finance', 'Finance')">Finance</button>
+                <button class="channel-btn" onclick="switchChannel('whitehouse', 'White House Live')">🏛️ WH Live</button>
+                <button class="channel-btn" onclick="switchChannel('trump', 'Trump Rally')">🇺🇸 Trump</button>
+            </div>
+        </div>
+
+        <button class="toggle-social" onclick="toggleSocial()">📱 Truth Social</button>
+
+        <div class="video-section">
+            <div class="video-player" id="videoPlayer">
+                <div class="youtube-container" id="whiteHouseFeed">
+                    <iframe src="https://www.youtube.com/embed/live_stream?channel=UCYxRlFDqcWM4y7FphyNwwzQ" allowfullscreen></iframe>
+                </div>
+
+                <div class="youtube-container" id="trumpFeed">
+                    <iframe src="https://www.youtube.com/embed/live_stream?channel=UCAql2DyGU2un1Ei2nMYsqOA" allowfullscreen></iframe>
+                </div>
+
+                <div class="social-feed-container active" id="socialFeed">
+                    <div class="social-header" onclick="toggleSocial()">📱 Truth Social Feed ✕</div>
+                    <div class="social-feed" id="socialFeedContent">Loading Truth Social...</div>
+                </div>
+
+                <div class="placeholder-content" id="placeholderContent">
+                    <h2 id="channelName">Main Channel</h2>
+                    <p>Select a channel to view live content</p>
+                    <p style="font-size: 12px; margin-top: 10px;">🏛️ White House Live | 🇺🇸 Trump Rallies | 💬 Truth Social</p>
+                </div>
+
+                <div class="api-status" id="apiStatus">📊 Market Data: Connecting...</div>
+            </div>
+        </div>
+
+        <div class="chat-section">
+            <div class="chat-header">💬 Live Chat - <span id="chatChannelName">Main</span></div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="message">
+                    <div class="message-username">System</div>
+                    <div class="message-text">Welcome to Fantazma Network! 🇺🇸 Real-time stocks loading...</div>
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" class="chat-input" id="usernameInput" placeholder="Name..." style="flex: 0.3;">
+                <input type="text" class="chat-input" id="messageInput" placeholder="Message..." style="flex: 0.7;">
+                <button class="send-btn" onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+        const BACKEND_URL = 'https://animated-parakeet.onrender.com';
+        let currentChannel = 'main';
+        let socket;
+        let socialVisible = true;
+        let stockUpdateInterval;
+
+        const stockSymbols = ['AAPL', 'GOOGL', 'MSFT', 'TSLA', 'AMZN', 'META', 'NVDA', 'NFLX', 'GME', 'AMC', 'BTC-USD', 'ETH-USD', 'SPY', 'QQQ', 'DIA'];
+        let stockCache = {};
+
+        document.addEventListener('DOMContentLoaded', () => {
+            connectSocket();
+            loadRealStocks();
+            loadTruthSocial();
+            stockUpdateInterval = setInterval(loadRealStocks, 30000);
+        });
+
+        async function loadRealStocks() {
+            const statusEl = document.getElementById('apiStatus');
+            statusEl.textContent = '📊 Market Data: Updating...';
+            statusEl.style.color = '#ffd700';
+
+            try {
+                const promises = stockSymbols.map(async (symbol) => {
+                    try {
+                        const response = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`);
+                        const data = await response.json();
+
+                        if (data.chart && data.chart.result && data.chart.result[0]) {
+                            const result = data.chart.result[0];
+                            const meta = result.meta;
+                            const currentPrice = result.indicators.quote[0].close.slice(-1)[0] || meta.regularMarketPrice;
+                            const previousClose = meta.previousClose || meta.chartPreviousClose;
+                            const change = currentPrice - previousClose;
+                            const changePercent = (change / previousClose) * 100;
+
+                            return {
+                                symbol: symbol,
+                                price: currentPrice.toFixed(2),
+                                change: changePercent.toFixed(2),
+                                changeValue: change.toFixed(2)
+                            };
+                        }
+                    } catch (e) {
+                        return null;
+                    }
+                });
+
+                const results = await Promise.all(promises);
+                const validResults = results.filter(r => r !== null);
+
+                if (validResults.length > 0) {
+                    stockCache = validResults;
+                    renderStocks(validResults);
+                    statusEl.textContent = `📊 Market Data: Live (${validResults.length} symbols)`;
+                    statusEl.style.color = '#00ff88';
+                } else {
+                    throw new Error('No valid stock data');
+                }
+
+            } catch (error) {
+                statusEl.textContent = '📊 Market Data: Demo Mode';
+                statusEl.style.color = '#ff4757';
+                renderStocks(getDemoStocks());
+            }
+        }
+
+        function getDemoStocks() {
+            return [
+                { symbol: 'AAPL', price: '175.43', change: '1.25' },
+                { symbol: 'GOOGL', price: '142.56', change: '0.85' },
+                { symbol: 'MSFT', price: '378.91', change: '-0.32' },
+                { symbol: 'TSLA', price: '245.67', change: '2.15' },
+                { symbol: 'AMZN', price: '178.23', change: '0.55' },
+                { symbol: 'META', price: '505.12', change: '-1.12' },
+                { symbol: 'NVDA', price: '892.45', change: '3.25' },
+                { symbol: 'BTC-USD', price: '67890.00', change: '2.85' },
+                { symbol: 'ETH-USD', price: '3456.78', change: '1.92' },
+                { symbol: 'SPY', price: '523.45', change: '0.65' },
+                { symbol: 'GME', price: '45.20', change: '5.80' },
+                { symbol: 'AMC', price: '12.34', change: '-2.15' }
+            ];
+        }
+
+        function renderStocks(stocks) {
+            const tickerContent = stocks.map(stock => {
+                const changeClass = parseFloat(stock.change) > 0 ? '' : (parseFloat(stock.change) < 0 ? 'negative' : 'neutral');
+                const changeSymbol = parseFloat(stock.change) > 0 ? '+' : '';
+                return `
+                    <div class="ticker-item-h">
+                        <span class="stock-symbol">${stock.symbol}</span>
+                        <span class="stock-price">$${stock.price}</span>
+                        <span class="stock-change ${changeClass}">${changeSymbol}${stock.change}%</span>
+                    </div>
+                `;
+            }).join('');
+
+            const tickerContentV = stocks.map(stock => {
+                const changeColor = parseFloat(stock.change) > 0 ? '#00ff88' : (parseFloat(stock.change) < 0 ? '#ff4757' : '#ffd700');
+                return `
+                    <div class="ticker-item-v">
+                        <span style="color: #e94560; font-weight: bold;">${stock.symbol}</span>
+                        <span style="color: ${changeColor}; font-size: 10px;">${stock.change}%</span>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('tickerTop').innerHTML = tickerContent + tickerContent;
+            document.getElementById('tickerBottom').innerHTML = tickerContent + tickerContent;
+            document.getElementById('tickerLeft').innerHTML = tickerContentV + tickerContentV;
+            document.getElementById('tickerRight').innerHTML = tickerContentV + tickerContentV;
+        }
+
+        const truthSocialPosts = [
+            { author: 'Donald J. Trump', handle: '@realDonaldTrump', content: 'MAKE AMERICA GREAT AGAIN! 🇺🇸 The economy is booming like never before!', time: '2m ago', avatar: '🇺🇸' },
+            { author: 'Trump War Room', handle: '@TrumpWarRoom', content: 'BREAKING: New polls show President Trump leading in all swing states!', time: '5m ago', avatar: '📢' },
+            { author: 'The White House', handle: '@WhiteHouse', content: 'LIVE: Presidential Address from the Oval Office. Tune in now!', time: '8m ago', avatar: '🏛️' },
+            { author: 'Donald J. Trump', handle: '@realDonaldTrump', content: 'Stock market at ALL TIME HIGHS! 401(k)s are through the roof!', time: '12m ago', avatar: '🇺🇸' },
+            { author: 'Team Trump', handle: '@TeamTrump', content: 'RALLY ALERT: Join us in Florida this Saturday! Doors open at 4PM.', time: '15m ago', avatar: '🎯' },
+            { author: 'Donald J. Trump Jr.', handle: '@DonaldJTrumpJr', content: 'The fake news media won\'t show you this, but the crowds are YUGE!', time: '18m ago', avatar: '🦅' },
+            { author: 'The White House', handle: '@WhiteHouse', content: 'Press Briefing scheduled for 2:00 PM EST today.', time: '22m ago', avatar: '🏛️' }
+        ];
+
+        function loadTruthSocial() {
+            const feedContent = document.getElementById('socialFeedContent');
+            feedContent.innerHTML = truthSocialPosts.map(post => `
+                <div class="social-post">
+                    <div class="post-header">
+                        <div class="post-avatar">${post.avatar}</div>
+                        <div>
+                            <div class="post-author">${post.author}</div>
+                            <div style="color: #666; font-size: 11px;">${post.handle}</div>
+                        </div>
+                        <span class="post-verified">✓</span>
+                    </div>
+                    <div class="post-content">${post.content}</div>
+                    <div class="post-time">${post.time}</div>
+                </div>
+            `).join('');
+        }
+
+        function toggleSocial() {
+            const feed = document.getElementById('socialFeed');
+            socialVisible = !socialVisible;
+            feed.classList.toggle('active', socialVisible);
+        }
+
+        function switchChannel(channel, name) {
+            document.querySelectorAll('.channel-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.getElementById('channelName').textContent = name;
+            document.getElementById('chatChannelName').textContent = name;
+            
+            document.querySelectorAll('.youtube-container').forEach(el => el.classList.remove('active'));
+            document.getElementById('placeholderContent').style.display = 'none';
+            
+            if (channel === 'whitehouse') {
+                document.getElementById('whiteHouseFeed').classList.add('active');
+            } else if (channel === 'trump') {
+                document.getElementById('trumpFeed').classList.add('active');
+            } else {
+                document.getElementById('placeholderContent').style.display = 'block';
+            }
+            
+            if (socket) socket.emit('join-room', channel);
+            currentChannel = channel;
+            
+            document.getElementById('chatMessages').innerHTML = `
+                <div class="message">
+                    <div class="message-username">System</div>
+                    <div class="message-text">Switched to ${name}</div>
+                </div>
+            `;
+        }
+
+        function connectSocket() {
+            socket = io(BACKEND_URL);
+            socket.on('connect', () => socket.emit('join-room', currentChannel));
+            socket.on('receive-message', (data) => displayMessage(data.username, data.message));
+        }
+
+        function sendMessage() {
+            const username = document.getElementById('usernameInput').value || 'Anonymous';
+            const message = document.getElementById('messageInput').value;
+            
+            if (message.trim() && socket) {
+                socket.emit('send-message', { roomId: currentChannel, message: message, username: username });
+                document.getElementById('messageInput').value = '';
+            }
+        }
+
+        function displayMessage(username, message) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            messageDiv.innerHTML = `<div class="message-username">${username}</div><div class="message-text">${message}</div>`;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        document.getElementById('messageInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+</body>
+</html>
