@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Fantazma Network</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Your CSS -->
+  <link rel="stylesheet" href="/css/fantazma.css">
+  
+  <style>
+    /* Page-specific styles */
+    .fn-auth__logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    
+    .fn-auth__logo img {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 16px;
+    }
+    
+    .fn-auth__title {
+      font-family: var(--font-display);
+      font-size: 32px;
+      letter-spacing: 2px;
+    }
+    
+    .fn-auth__toggle {
+      text-align: center;
+      margin-top: 24px;
+      color: rgba(240, 240, 240, 0.6);
+      font-size: 14px;
+    }
+    
+    .fn-auth__toggle a {
+      color: var(--patriot-crimson);
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    
+    .error-message {
+      color: var(--patriot-crimson);
+      text-align: center;
+      margin-bottom: 16px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="fn-auth">
+    <div class="fn-auth__box">
+      <div class="fn-auth__logo">
+        <!-- Replace with your actual logo -->
+        <div style="width: 80px; height: 80px; background: var(--patriot-crimson); border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 24px;">F</div>
+        <h1 class="fn-auth__title">FANTAZMA NETWORK</h1>
+      </div>
+      
+      <div class="fn-auth__price">$4.99/month</div>
+      
+      <div class="error-message" id="errorMsg"></div>
+      
+      <!-- Login Form -->
+      <form id="loginForm">
+        <input type="email" class="fn-input" id="email" placeholder="Email" required>
+        <input type="password" class="fn-input" id="password" placeholder="Password" required>
+        <button type="submit" class="fn-btn fn-btn--primary" style="width: 100%;">Login</button>
+        <div class="fn-auth__toggle">
+          Don't have an account? <a onclick="showSignup()">Sign up</a>
+        </div>
+      </form>
+      
+      <!-- Signup Form (hidden by default) -->
+      <form id="signupForm" style="display: none;">
+        <input type="email" class="fn-input" id="signupEmail" placeholder="Email" required>
+        <input type="password" class="fn-input" id="signupPassword" placeholder="Password" required>
+        <input type="password" class="fn-input" id="confirmPassword" placeholder="Confirm Password" required>
+        <button type="submit" class="fn-btn fn-btn--primary" style="width: 100%;">Sign Up & Subscribe</button>
+        <div class="fn-auth__toggle">
+          Have an account? <a onclick="showLogin()">Login</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Toggle between login and signup
+    function showSignup() {
+      document.getElementById('loginForm').style.display = 'none';
+      document.getElementById('signupForm').style.display = 'block';
+      document.getElementById('errorMsg').style.display = 'none';
+    }
+    
+    function showLogin() {
+      document.getElementById('signupForm').style.display = 'none';
+      document.getElementById('loginForm').style.display = 'block';
+      document.getElementById('errorMsg').style.display = 'none';
+    }
+    
+    // Handle Login
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({email, password})
+        });
+        
+        const data = await res.json();
+        
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+          
+          if (data.isPaid) {
+            window.location = '/'; // Go to main site
+          } else {
+            // Need to pay - redirect to Stripe
+            const paymentRes = await fetch('/api/create-subscription', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({email})
+            });
+            const paymentData = await paymentRes.json();
+            window.location = paymentData.url;
+          }
+        } else {
+          showError(data.error || 'Login failed');
+        }
+      } catch (err) {
+        showError('Network error. Try again.');
+      }
+    });
+    
+    // Handle Signup
+    document.getElementById('signupForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const email = document.getElementById('signupEmail').value;
+      const password = document.getElementById('signupPassword').value;
+      const confirm = document.getElementById('confirmPassword').value;
+      
+      if (password !== confirm) {
+        showError('Passwords do not match');
+        return;
+      }
+      
+      try {
+        // Create account
+        const res = await fetch('/api/signup', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({email, password})
+        });
+        
+        if (res.ok) {
+          // Go to Stripe payment
+          const paymentRes = await fetch('/api/create-subscription', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({email})
+          });
+          const paymentData = await paymentRes.json();
+          window.location = paymentData.url;
+        } else {
+          const data = await res.json();
+          showError(data.error || 'Signup failed');
+        }
+      } catch (err) {
+        showError('Network error. Try again.');
+      }
+    });
+    
+    function showError(msg) {
+      const errorEl = document.getElementById('errorMsg');
+      errorEl.textContent = msg;
+      errorEl.style.display = 'block';
+    }
+  </script>
+</body>
+</html>
