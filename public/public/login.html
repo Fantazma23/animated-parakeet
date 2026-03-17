@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Fantazma Network</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/fantazma.css">
+</head>
+<body>
+  <div class="fn-auth">
+    <div class="fn-auth__box">
+      <div class="fn-auth__logo">
+        <div class="fn-logo__eye" style="width: 80px; height: 80px; font-size: 40px; margin: 0 auto 16px;">F</div>
+        <h1 class="fn-auth__title">FANTAZMA NETWORK</h1>
+      </div>
+      
+      <div class="fn-auth__price">$4.99/month</div>
+      
+      <div class="error-message" id="errorMsg"></div>
+      
+      <form id="loginForm">
+        <input type="email" class="fn-input" id="email" placeholder="Email" required>
+        <input type="password" class="fn-input" id="password" placeholder="Password" required>
+        <button type="submit" class="fn-btn fn-btn--primary" style="width: 100%;">Login</button>
+        <div class="fn-auth__toggle">
+          Demo mode: Use any email/password
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      // Demo token - replace with real auth later
+      localStorage.setItem('token', 'demo-token-' + Date.now());
+      window.location = '/';
+    });
+  </script>
+</body>
+</html>
